@@ -51,7 +51,7 @@
   .hearts { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
   .term.big { width: min(900px, 100%); }
   .term.big .btns { display: none; }
-  canvas#snow { opacity: 0; transition: opacity 1.5s; }
+  canvas#snow { opacity: 0; transition: opacity .3s; }
   canvas#snow.on { opacity: 1; }
   .hearts span { position: absolute; top: -40px; color: #fff; animation: fall linear forwards; text-shadow: 0 0 8px rgba(191, 230, 255, 0.7); }
   @keyframes fall { to { transform: translateY(115vh) rotate(200deg); } }
@@ -101,7 +101,7 @@ let snowPink = false, party = false, snowTimer = null;
 function snowLoop(t) {
   sx.clearRect(0, 0, sc.width, sc.height);
   for (const f of flakes) {
-    f.y += f.v * (snowPink ? 1.6 : 1); if (f.y > 1.02) { f.y = -0.02; f.x = Math.random(); }
+    f.y += f.v; if (f.y > 1.02) { f.y = -0.02; f.x = Math.random(); }
     const x = (f.x + Math.sin(t / 1800 + f.p) * 0.01) * sc.width, y = f.y * sc.height;
     sx.beginPath(); sx.arc(x, y, f.r * devicePixelRatio, 0, 6.29);
     sx.fillStyle = f.r > 1.9 ? "rgba(191,230,255,.85)" : "rgba(240,248,255,.85)";
@@ -153,12 +153,14 @@ function build() {
 const PTS = build();
 const COLS = 72, ROWS = 33, ASPECT = 1.9; // monospace chars are ~2x taller than wide
 let L = [-0.4, 0.55, 0.75]; { const n = Math.hypot(...L); L = L.map((v) => v / n); }
-let spinBoost = 0.45, BASE_SPIN = 0.45;
+let spinBoost = 0.45, BASE_SPIN = 0.45, whipAt = 0;
 const sparkles = Array.from({ length: 26 }, () => { const a = Math.random() * 6.28, r = 0.25 + Math.random() * 0.9; return [r * Math.cos(a), r * Math.sin(a), (Math.random() - 0.5) * 0.1, Math.random() * 6.28, 1.5 + Math.random() * 2.5]; });
 
 let spinT = 0, lastT = 0;
 function renderFlake(now) {
-  const dt = Math.min(0.05, (now - lastT) / 1000 || 0); lastT = now; spinT += dt * spinBoost;
+  const dt = Math.min(0.05, (now - lastT) / 1000 || 0); lastT = now;
+  if (whipAt) { const e = (now - whipAt) / 1000; spinBoost = BASE_SPIN + 14 * Math.exp(-e / 0.45); if (e > 3) whipAt = 0; }
+  spinT += dt * spinBoost;
   const t = spinT, chars = new Array(COLS * ROWS).fill(" "), cols = new Array(COLS * ROWS).fill(null), z = new Float32Array(COLS * ROWS).fill(-1e9);
   const scale = (ROWS - 2) / 2.3, cx = COLS / 2, cy = ROWS / 2;
   const sp = t * 0.9, tw = t * 0.25, tl = 0.25;
@@ -215,7 +217,7 @@ async function type(el, text, speed = 42, prefix = "") {
 async function story() {
   log.innerHTML = ""; $("flake").innerHTML = ""; $("q").textContent = ""; $("msg").textContent = "";
   $("btns").classList.remove("show"); $("replay").classList.remove("show");
-  flakeOn = false; pal = { a: WHITE, b: ICE }; spinBoost = BASE_SPIN = 0.45;
+  flakeOn = false; pal = { a: WHITE, b: ICE }; spinBoost = BASE_SPIN = 0.45; whipAt = 0;
   $("term").classList.remove("big"); $("snow").classList.remove("on"); bigFlake = false;
   await sleep(500);
   const cmd = addLine("");
@@ -261,8 +263,11 @@ $("yes").addEventListener("click", async () => {
   $("btns").classList.remove("show"); $("no").classList.remove("loose"); $("no").style.cssText = ""; $("yes").style.transform = "";
   $("msg").textContent = ""; noCount = 0;
   spinBoost = 3; snowPink = true; party = true; $("term").classList.add("party");
-  BASE_SPIN = 1.6; setTimeout(() => (spinBoost = BASE_SPIN), 1600);
-  bigFlake = true; $("term").classList.add("big"); $("snow").classList.add("on");
+  BASE_SPIN = 1.6; whipAt = performance.now();
+  $("flake").animate([{ transform: "scale(1)" }, { transform: "scale(1.18)", offset: 0.25 }, { transform: "scale(1)" }], { duration: 900, easing: "cubic-bezier(.2,.8,.2,1)" });
+  bigFlake = true; $("term").classList.add("big");
+  for (const f of flakes) { f.y = -0.02 - Math.random() * 1.1; f.v = 0.0012 + Math.random() * 0.0018; }  // start above the screen and fall in
+  $("snow").classList.add("on");
   fitFlake(); setTimeout(fitFlake, 950);
   const H = $("hearts");
   const drop = (delay) => {
