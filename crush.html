@@ -6,52 +6,58 @@
 <title>for you ❄</title>
 <style>
   :root {
-    --bg1: #0b1026; --bg2: #2a1a3e; --pink: #ff9ccf; --pink2: #ffc6e3; --ice: #bfe6ff;
-    --term: rgba(14, 16, 34, 0.86); --text: #e8f3ff; --dim: #8ea3c7;
+    --pink: #ff9ccf; --pink2: #d4d4d4; --ice: #bfe6ff;
+    --term: #1e1e1e; --bar: #323233; --edge: #3c3c3c; --text: #d4d4d4; --dim: #858585; --prompt: #9cdcfe;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body {
-    background: radial-gradient(120% 80% at 50% 0%, #2d1f4f 0%, var(--bg1) 55%, #060814 100%);
+    background: #000;
     color: var(--text); font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     overflow: hidden; display: grid; place-items: center; padding: 16px;
   }
   canvas#snow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   .term {
-    position: relative; width: min(560px, 100%); border-radius: 16px; background: var(--term);
-    border: 1px solid rgba(255, 156, 207, 0.35);
-    box-shadow: 0 0 0 6px rgba(255, 156, 207, 0.06), 0 20px 80px rgba(255, 120, 190, 0.18), 0 0 120px rgba(150, 200, 255, 0.12);
-    backdrop-filter: blur(6px); overflow: hidden;
+    position: relative; z-index: 1; width: min(560px, 100%); border-radius: 10px; background: var(--term);
+    border: 1px solid var(--edge); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    overflow: hidden; transition: width .9s ease;
   }
-  .bar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; background: rgba(255, 156, 207, 0.08); border-bottom: 1px solid rgba(255, 156, 207, 0.18); }
+  .bar { display: flex; align-items: center; gap: 7px; padding: 9px 12px; background: var(--bar); border-bottom: 1px solid var(--edge); }
   .dot { width: 11px; height: 11px; border-radius: 50%; }
-  .bar .title { flex: 1; text-align: center; font-size: 12px; color: var(--pink2); margin-right: 40px; letter-spacing: .5px; }
+  .bar .title { flex: 1; text-align: center; font-size: 12px; color: #cccccc; margin-right: 40px; letter-spacing: .3px; }
   .body { padding: 14px 16px 18px; min-height: 380px; }
   .line { font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
-  .prompt { color: var(--pink); }
-  .ok { color: #9ff0c4; }
+  .prompt { color: var(--prompt); }
+  .ok { color: #4ec9b0; }
   .dim { color: var(--dim); }
-  .cursor { display: inline-block; width: 8px; height: 1.05em; background: var(--pink); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+  .cursor { display: inline-block; width: 8px; height: 1.05em; background: #aeafad; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
-  pre#flake { margin: 8px auto 0; text-align: center; line-height: 1; font-size: 10px; letter-spacing: 0; min-height: 0; transition: filter .6s; user-select: none; }
-  .q { text-align: center; font-size: clamp(17px, 4.6vw, 22px); color: #fff; margin: 14px 0 4px; min-height: 1.4em; text-shadow: 0 0 18px rgba(255, 156, 207, 0.6); }
+  pre#flake { margin: 8px auto 0; text-align: center; line-height: 1; font-size: 10px; letter-spacing: 0; min-height: 0; transition: font-size .9s ease; user-select: none; }
+  .q { text-align: center; font-size: clamp(17px, 4.6vw, 22px); color: #fff; margin: 14px 0 4px; min-height: 1.4em; text-shadow: 0 0 18px rgba(191, 230, 255, 0.35); }
   .btns { position: relative; display: flex; justify-content: center; gap: 18px; margin-top: 14px; height: 52px; opacity: 0; transition: opacity .5s; }
   .btns.show { opacity: 1; }
   button {
     font: inherit; font-size: 15px; border-radius: 999px; padding: 11px 26px; cursor: pointer; border: 0;
     transition: transform .25s, background .25s;
   }
-  #yes { background: linear-gradient(135deg, #ff8cc6, #ffb8dc); color: #3a0c26; box-shadow: 0 6px 24px rgba(255, 140, 198, 0.45); font-weight: 700; }
-  #yes:hover { filter: brightness(1.06); }
-  #no { background: rgba(191, 230, 255, 0.12); color: var(--ice); border: 1px solid rgba(191, 230, 255, 0.35); }
+  #yes { background: #3c3c3c; color: #ffffff; border: 1px solid #5a5a5a; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); font-weight: 700; }
+  #yes:hover { background: #4a4a4a; }
+  .party .q { background: linear-gradient(90deg, #ff6b6b, #ffb347, #ffe66d, #6bffb8, #6bc8ff, #b48bff, #ff7ad9, #ff6b6b);
+    background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; animation: rainbow 3s linear infinite; }
+  @keyframes rainbow { to { background-position: 200% 0; } }
+  #no { background: #2d2d2d; color: #cccccc; border: 1px solid var(--edge); }
   #no.loose { position: fixed; z-index: 5; transition: left .25s ease, top .25s ease, transform .25s; }
   .msg { text-align: center; color: var(--pink2); font-size: 13px; min-height: 1.4em; margin-top: 8px; }
   .sig { text-align: right; color: var(--dim); font-size: 12px; margin-top: 12px; opacity: 0; transition: opacity 1s; }
   .sig.show { opacity: 1; }
   .yay .q { color: var(--pink2); }
   .hearts { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
-  .hearts span { position: absolute; bottom: -30px; animation: up linear forwards; }
-  @keyframes up { to { transform: translateY(-110vh) rotate(25deg); opacity: 0; } }
+  .term.big { width: min(900px, 100%); }
+  .term.big .btns { display: none; }
+  canvas#snow { opacity: 0; transition: opacity 1.5s; }
+  canvas#snow.on { opacity: 1; }
+  .hearts span { position: absolute; top: -40px; color: #fff; animation: fall linear forwards; text-shadow: 0 0 8px rgba(191, 230, 255, 0.7); }
+  @keyframes fall { to { transform: translateY(115vh) rotate(200deg); } }
   .replay { display: block; margin: 12px auto 0; background: transparent; color: var(--dim); font-size: 12px; padding: 4px 10px; opacity: 0; transition: opacity 1s; }
   .replay.show { opacity: 1; }
 </style>
@@ -60,9 +66,9 @@
 <canvas id="snow"></canvas>
 <main class="term" id="term">
   <div class="bar">
-    <span class="dot" style="background:#ff7aa8"></span>
-    <span class="dot" style="background:#ffd27a"></span>
-    <span class="dot" style="background:#8ee6b8"></span>
+    <span class="dot" style="background:#ff5f57"></span>
+    <span class="dot" style="background:#febc2e"></span>
+    <span class="dot" style="background:#28c840"></span>
     <span class="title" id="title">for_you.py</span>
   </div>
   <div class="body">
@@ -94,15 +100,15 @@ const sc = $("snow"), sx = sc.getContext("2d");
 let flakes = [];
 function sizeSnow() { sc.width = innerWidth * devicePixelRatio; sc.height = innerHeight * devicePixelRatio; }
 sizeSnow(); addEventListener("resize", sizeSnow);
-for (let i = 0; i < 90; i++) flakes.push({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 2.2, v: 0.0006 + Math.random() * 0.0014, p: Math.random() * 6.28, pink: Math.random() < 0.25 });
-let snowPink = false;
+for (let i = 0; i < 220; i++) flakes.push({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 2.2, v: 0.0006 + Math.random() * 0.0014, p: Math.random() * 6.28, pink: false });
+let snowPink = false, party = false;
 function snowLoop(t) {
   sx.clearRect(0, 0, sc.width, sc.height);
   for (const f of flakes) {
     f.y += f.v * (snowPink ? 1.6 : 1); if (f.y > 1.02) { f.y = -0.02; f.x = Math.random(); }
     const x = (f.x + Math.sin(t / 1800 + f.p) * 0.01) * sc.width, y = f.y * sc.height;
     sx.beginPath(); sx.arc(x, y, f.r * devicePixelRatio, 0, 6.29);
-    sx.fillStyle = (f.pink || snowPink && f.r > 1.6) ? "rgba(255,170,215,.85)" : "rgba(225,240,255,.8)";
+    sx.fillStyle = party ? `hsla(${(f.p * 57 + t / 20) % 360}, 95%, 72%, .9)` : f.r > 1.9 ? "rgba(191,230,255,.85)" : "rgba(240,248,255,.85)";
     sx.fill();
   }
   requestAnimationFrame(snowLoop);
@@ -111,9 +117,9 @@ requestAnimationFrame(snowLoop);
 
 // ---------- spinning 3D ascii snowflake (same idea as snowflake.py) ----------
 const SHADE = ".:-=+*#%@";
-const ICE = ["#1b2a55", "#24427a", "#2e5f9e", "#3c80c0", "#58a3dc", "#7cc0ee", "#a3d6f7", "#c6e7fc", "#e2f3ff", "#ffffff"];
-const PINK = ["#4a1838", "#6e2352", "#952e6c", "#c04488", "#e260a4", "#f47fb8", "#ff9fcb", "#ffbedc", "#ffdcec", "#ffffff"];
-let pal = { a: ICE, b: PINK };
+const WHITE = ["#5a5a5a", "#7a7a7a", "#9a9a9a", "#b8b8b8", "#d0d0d0", "#e2e2e2", "#efefef", "#f7f7f7", "#ffffff", "#ffffff"];
+const ICE = ["#4f7d9c", "#6b9cbd", "#86b6d6", "#a3cde9", "#bfe0f5", "#d2eafb", "#e2f2fd", "#eef8ff", "#f6fbff", "#ffffff"];
+let pal = { a: WHITE, b: ICE };
 
 function build() {
   const pts = [], TH = 0.03;
@@ -169,6 +175,11 @@ function renderFlake(now) {
     const sh = Math.abs(p[8] - glint) < 0.06 ? 0.35 : 0;
     const b = Math.min(0.999, Math.max(0, 0.1 + 0.7 * d + p[7] + sh));
     const f = 4 / (4 - Z), P2 = p[6] ? pal.b : pal.a;
+    if (party) {
+      const hue = (Math.round(((Math.atan2(p[1], p[0]) * 57.3 + 360) + Math.hypot(p[0], p[1]) * 120 + t * 90) / 20) * 20) % 360;
+      plot(Math.floor(cx + X * f * scale * ASPECT), Math.floor(cy - Y * f * scale), Z, SHADE[Math.floor(b * SHADE.length)], `hsl(${hue},95%,${Math.round(4 + b * 10) * 5}%)`);
+      continue;
+    }
     plot(Math.floor(cx + X * f * scale * ASPECT), Math.floor(cy - Y * f * scale), Z, SHADE[Math.floor(b * SHADE.length)], P2[Math.floor(b * P2.length)]);
   }
   for (const s of sparkles) {
@@ -189,9 +200,10 @@ function renderFlake(now) {
   }
   $("flake").innerHTML = html;
 }
+let bigFlake = false;
 function fitFlake() {
   const w = $("flake").parentElement.clientWidth - 8;
-  $("flake").style.fontSize = Math.min(13, w / (COLS * 0.6)) + "px";
+  $("flake").style.fontSize = Math.min(bigFlake ? 20 : 13, w / (COLS * 0.6), bigFlake ? (innerHeight - 400) / ROWS : 99) + "px";
 }
 addEventListener("resize", fitFlake);
 let flakeOn = false;
@@ -210,7 +222,8 @@ async function type(el, text, speed = 42, prefix = "") {
 async function story() {
   log.innerHTML = ""; $("flake").innerHTML = ""; $("q").textContent = ""; $("msg").textContent = "";
   $("btns").classList.remove("show"); $("sig").classList.remove("show"); $("replay").classList.remove("show");
-  flakeOn = false; pal = { a: ICE, b: PINK }; spinBoost = 1;
+  flakeOn = false; pal = { a: WHITE, b: ICE }; spinBoost = 1;
+  $("term").classList.remove("big"); $("snow").classList.remove("on"); bigFlake = false;
   await sleep(500);
   const cmd = addLine("");
   await type(cmd, `python3 ${$("title").textContent}`, 55, '<span class="prompt">~ $ </span>');
@@ -241,35 +254,39 @@ function runAway() {
   while (Math.hypot(x - r.left, y - r.top) < 160 && tries < 20);
   b.style.left = x + "px"; b.style.top = y + "px";
   noCount++;
-  b.style.transform = `scale(${Math.max(0.55, 1 - noCount * 0.07)})`;
-  $("yes").style.transform = `scale(${Math.min(1.6, 1 + noCount * 0.09)})`;
+  b.style.transform = `scale(${Math.max(0.12, Math.pow(0.82, noCount))})`;
+  $("yes").style.transform = `scale(${Math.min(1.8, 1 + noCount * 0.09)})`;
   $("msg").textContent = NO_LINES[(noCount - 1) % NO_LINES.length];
   spinBoost = 1 + Math.min(noCount, 6) * 0.6; setTimeout(() => (spinBoost = Math.max(1, spinBoost - 1)), 600);
 }
 $("no").addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") runAway(); });
-$("no").addEventListener("click", (e) => { e.preventDefault(); runAway(); });
+$("no").addEventListener("pointerdown", (e) => { e.preventDefault(); runAway(); });
+$("no").addEventListener("click", (e) => { e.preventDefault(); });
 
 // ---------- yes! ----------
 $("yes").addEventListener("click", async () => {
   $("btns").classList.remove("show"); $("no").classList.remove("loose"); $("no").style.cssText = ""; $("yes").style.transform = "";
   $("msg").textContent = ""; noCount = 0;
-  pal = { a: PINK, b: ICE }; spinBoost = 3; snowPink = true;
+  spinBoost = 3; snowPink = true; party = true; $("term").classList.add("party");
   setTimeout(() => (spinBoost = 1.2), 1600);
+  bigFlake = true; $("term").classList.add("big"); $("snow").classList.add("on");
+  fitFlake(); setTimeout(fitFlake, 950);
   const H = $("hearts");
-  for (let i = 0; i < 46; i++) {
+  for (let i = 0; i < 70; i++) {
     const s = document.createElement("span");
-    s.textContent = ["💗", "❄️", "🤍", "💕", "❄"][i % 5];
-    s.style.left = Math.random() * 100 + "vw"; s.style.fontSize = 14 + Math.random() * 18 + "px";
-    s.style.animationDuration = 3 + Math.random() * 3 + "s"; s.style.animationDelay = Math.random() * 1.5 + "s";
-    H.appendChild(s); setTimeout(() => s.remove(), 8000);
+    s.textContent = ["❄", "❅", "❆"][i % 3];
+    s.style.left = Math.random() * 100 + "vw"; s.style.fontSize = 14 + Math.random() * 22 + "px";
+    const hu = Math.floor(Math.random() * 360); s.style.color = `hsl(${hu},95%,72%)`; s.style.textShadow = `0 0 10px hsla(${hu},95%,65%,.8)`;
+    s.style.animationDuration = 4 + Math.random() * 4 + "s"; s.style.animationDelay = Math.random() * 4 + "s";
+    H.appendChild(s); setTimeout(() => s.remove(), 13000);
   }
   $("q").textContent = "";
-  await type($("q"), "yay!! you're my snowflake now ❄️💗", 55);
+  await type($("q"), "yay!! you're my snowflake now ❄️", 55);
   const out = addLine("", "ok"); await type(out, "> answer saved forever. no take backs.", 30);
   $("sig").textContent = FROM ? `// made with love by ${FROM}` : "// made with love, just for you";
   $("sig").classList.add("show"); $("replay").classList.add("show");
 });
-$("replay").addEventListener("click", () => { snowPink = false; story(); });
+$("replay").addEventListener("click", () => { snowPink = false; party = false; $("term").classList.remove("party"); story(); });
 
 story();
 </script>
