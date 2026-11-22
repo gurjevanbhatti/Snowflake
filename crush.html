@@ -245,7 +245,11 @@ function runAway() {
   if (performance.now() - lastRun < 650) return;  // let it finish moving before it dodges again
   lastRun = performance.now();
   const b = $("no"), r = b.getBoundingClientRect();
-  if (!b.classList.contains("loose")) { b.style.left = r.left + "px"; b.style.top = r.top + "px"; b.classList.add("loose"); }
+  if (!b.classList.contains("loose")) {
+    // pin it where it is first (no animation), so the first dodge glides like the others
+    b.style.transition = "none"; b.style.left = r.left + "px"; b.style.top = r.top + "px"; b.classList.add("loose");
+    void b.offsetWidth; b.style.transition = "";
+  }
   const pad = 20, w = r.width, h = r.height;
   let x, y, tries = 0;
   do { x = pad + Math.random() * (innerWidth - w - pad * 2); y = pad + Math.random() * (innerHeight - h - pad * 2); tries++; }
