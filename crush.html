@@ -43,7 +43,7 @@
   #yes { background: #3c3c3c; color: #ffffff; border: 1px solid #5a5a5a; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); font-weight: 700; }
   #yes:hover { background: #4a4a4a; }
   #no { background: #2d2d2d; color: #cccccc; border: 1px solid var(--edge); }
-  #no.loose { position: fixed; z-index: 5; transition: left .25s ease, top .25s ease, transform .25s; }
+  #no.loose { position: fixed; z-index: 5; transition: left .75s cubic-bezier(.25,.8,.3,1), top .75s cubic-bezier(.25,.8,.3,1), transform .6s ease; }
   .msg { text-align: center; color: var(--pink2); font-size: 13px; min-height: 1.4em; margin-top: 26px; }
   .sig { text-align: right; color: var(--dim); font-size: 12px; margin-top: 12px; opacity: 0; transition: opacity 1s; }
   .sig.show { opacity: 1; }
@@ -240,7 +240,10 @@ async function story() {
 // ---------- the runaway "no" ----------
 const NO_LINES = ["error: answer not found", "are you sure? 🥺", "that button is broken, sorry", "try the other one", "permission denied ❄", "no is not in my code", "pls 🥹"];
 let noCount = 0;
+let lastRun = 0;
 function runAway() {
+  if (performance.now() - lastRun < 650) return;  // let it finish moving before it dodges again
+  lastRun = performance.now();
   const b = $("no"), r = b.getBoundingClientRect();
   if (!b.classList.contains("loose")) { b.style.left = r.left + "px"; b.style.top = r.top + "px"; b.classList.add("loose"); }
   const pad = 20, w = r.width, h = r.height;
