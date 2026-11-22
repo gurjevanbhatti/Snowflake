@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>for you ❄</title>
+<style>
+  :root {
+    --bg1: #0b1026; --bg2: #2a1a3e; --pink: #ff9ccf; --pink2: #ffc6e3; --ice: #bfe6ff;
+    --term: rgba(14, 16, 34, 0.86); --text: #e8f3ff; --dim: #8ea3c7;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: radial-gradient(120% 80% at 50% 0%, #2d1f4f 0%, var(--bg1) 55%, #060814 100%);
+    color: var(--text); font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    overflow: hidden; display: grid; place-items: center; padding: 16px;
+  }
+  canvas#snow { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .term {
+    position: relative; width: min(560px, 100%); border-radius: 16px; background: var(--term);
+    border: 1px solid rgba(255, 156, 207, 0.35);
+    box-shadow: 0 0 0 6px rgba(255, 156, 207, 0.06), 0 20px 80px rgba(255, 120, 190, 0.18), 0 0 120px rgba(150, 200, 255, 0.12);
+    backdrop-filter: blur(6px); overflow: hidden;
+  }
+  .bar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; background: rgba(255, 156, 207, 0.08); border-bottom: 1px solid rgba(255, 156, 207, 0.18); }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .bar .title { flex: 1; text-align: center; font-size: 12px; color: var(--pink2); margin-right: 40px; letter-spacing: .5px; }
+  .body { padding: 14px 16px 18px; min-height: 380px; }
+  .line { font-size: 13.5px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+  .prompt { color: var(--pink); }
+  .ok { color: #9ff0c4; }
+  .dim { color: var(--dim); }
+  .cursor { display: inline-block; width: 8px; height: 1.05em; background: var(--pink); vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  pre#flake { margin: 8px auto 0; text-align: center; line-height: 1; font-size: 10px; letter-spacing: 0; min-height: 0; transition: filter .6s; user-select: none; }
+  .q { text-align: center; font-size: clamp(17px, 4.6vw, 22px); color: #fff; margin: 14px 0 4px; min-height: 1.4em; text-shadow: 0 0 18px rgba(255, 156, 207, 0.6); }
+  .btns { position: relative; display: flex; justify-content: center; gap: 18px; margin-top: 14px; height: 52px; opacity: 0; transition: opacity .5s; }
+  .btns.show { opacity: 1; }
+  button {
+    font: inherit; font-size: 15px; border-radius: 999px; padding: 11px 26px; cursor: pointer; border: 0;
+    transition: transform .25s, background .25s;
+  }
+  #yes { background: linear-gradient(135deg, #ff8cc6, #ffb8dc); color: #3a0c26; box-shadow: 0 6px 24px rgba(255, 140, 198, 0.45); font-weight: 700; }
+  #yes:hover { filter: brightness(1.06); }
+  #no { background: rgba(191, 230, 255, 0.12); color: var(--ice); border: 1px solid rgba(191, 230, 255, 0.35); }
+  #no.loose { position: fixed; z-index: 5; transition: left .25s ease, top .25s ease, transform .25s; }
+  .msg { text-align: center; color: var(--pink2); font-size: 13px; min-height: 1.4em; margin-top: 8px; }
+  .sig { text-align: right; color: var(--dim); font-size: 12px; margin-top: 12px; opacity: 0; transition: opacity 1s; }
+  .sig.show { opacity: 1; }
+  .yay .q { color: var(--pink2); }
+  .hearts { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .hearts span { position: absolute; bottom: -30px; animation: up linear forwards; }
+  @keyframes up { to { transform: translateY(-110vh) rotate(25deg); opacity: 0; } }
+  .replay { display: block; margin: 12px auto 0; background: transparent; color: var(--dim); font-size: 12px; padding: 4px 10px; opacity: 0; transition: opacity 1s; }
+  .replay.show { opacity: 1; }
+</style>
+</head>
+<body>
+<canvas id="snow"></canvas>
+<main class="term" id="term">
+  <div class="bar">
+    <span class="dot" style="background:#ff7aa8"></span>
+    <span class="dot" style="background:#ffd27a"></span>
+    <span class="dot" style="background:#8ee6b8"></span>
+    <span class="title" id="title">for_you.py</span>
+  </div>
+  <div class="body">
+    <div id="log"></div>
+    <pre id="flake" aria-hidden="true"></pre>
+    <div class="q" id="q"></div>
+    <div class="btns" id="btns"><button id="yes">yes ❄️</button><button id="no">no</button></div>
+    <div class="msg" id="msg"></div>
+    <div class="sig" id="sig"></div>
+    <button class="replay" id="replay">↻ run again</button>
+  </div>
+</main>
+<div class="hearts" id="hearts"></div>
+
+<script>
+// ---------- personalise with ?to=Name&from=Name ----------
+const P = new URLSearchParams(location.search);
+const TO = (P.get("to") || "").slice(0, 30);
+const FROM = (P.get("from") || "").slice(0, 30);
+const QUESTION = P.get("q") ? P.get("q").slice(0, 80) : "will you be my snowflake this christmas?";
+document.getElementById("title").textContent = TO ? `for_${TO.toLowerCase().replace(/\W+/g, "_")}.py` : "for_you.py";
+
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+// ---------- falling snow background ----------
+const sc = $("snow"), sx = sc.getContext("2d");
+let flakes = [];
+function sizeSnow() { sc.width = innerWidth * devicePixelRatio; sc.height = innerHeight * devicePixelRatio; }
+sizeSnow(); addEventListener("resize", sizeSnow);
+for (let i = 0; i < 90; i++) flakes.push({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 2.2, v: 0.0006 + Math.random() * 0.0014, p: Math.random() * 6.28, pink: Math.random() < 0.25 });
+let snowPink = false;
+function snowLoop(t) {
+  sx.clearRect(0, 0, sc.width, sc.height);
+  for (const f of flakes) {
+    f.y += f.v * (snowPink ? 1.6 : 1); if (f.y > 1.02) { f.y = -0.02; f.x = Math.random(); }
+    const x = (f.x + Math.sin(t / 1800 + f.p) * 0.01) * sc.width, y = f.y * sc.height;
+    sx.beginPath(); sx.arc(x, y, f.r * devicePixelRatio, 0, 6.29);
+    sx.fillStyle = (f.pink || snowPink && f.r > 1.6) ? "rgba(255,170,215,.85)" : "rgba(225,240,255,.8)";
+    sx.fill();
+  }
+  requestAnimationFrame(snowLoop);
+}
+requestAnimationFrame(snowLoop);
+
+// ---------- spinning 3D ascii snowflake (same idea as snowflake.py) ----------
+const SHADE = ".:-=+*#%@";
+const ICE = ["#1b2a55", "#24427a", "#2e5f9e", "#3c80c0", "#58a3dc", "#7cc0ee", "#a3d6f7", "#c6e7fc", "#e2f3ff", "#ffffff"];
+const PINK = ["#4a1838", "#6e2352", "#952e6c", "#c04488", "#e260a4", "#f47fb8", "#ff9fcb", "#ffbedc", "#ffdcec", "#ffffff"];
+let pal = { a: ICE, b: PINK };
+
+function build() {
+  const pts = [], TH = 0.03;
+  function slab(p0, p1, w0, w1, tip) {
+    const dx = p1[0] - p0[0], dy = p1[1] - p0[1], L = Math.hypot(dx, dy);
+    const px = -dy / L, py = dx / L, n = Math.max(2, Math.floor(L / 0.016));
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, w = w0 + (w1 - w0) * t, cx = p0[0] + dx * t, cy = p0[1] + dy * t;
+      const m = Math.max(1, Math.floor(w / 0.012));
+      for (let j = -m; j <= m; j++) {
+        const s = j / m, bv = s * 0.8, l = Math.hypot(px * bv, py * bv, 1);
+        const ridge = 0.25 * (1 - Math.abs(s)) ** 2;
+        for (const side of [1, -1])
+          pts.push([cx + px * w * s, cy + py * w * s, side * TH * (1 - Math.abs(s) * 0.6), px * bv / l, py * bv / l, side / l, tip, ridge, t]);
+      }
+    }
+  }
+  for (let k = 0; k < 6; k++) {
+    const a = k * Math.PI / 3, ca = Math.cos(a), sa = Math.sin(a);
+    const rot = (x, y) => [x * ca - y * sa, x * sa + y * ca];
+    slab(rot(0, 0.1), rot(0, 1), 0.055, 0.025, 0);
+    for (const [pos, ln, w] of [[0.32, 0.3, 0.035], [0.58, 0.27, 0.03], [0.8, 0.15, 0.024]])
+      for (const sd of [-1, 1]) slab(rot(0, pos), rot(sd * ln * Math.sin(Math.PI / 3), pos + ln * Math.cos(Math.PI / 3)), w, w * 0.45, pos > 0.7 ? 1 : 0);
+    slab(rot(0, 0.95), rot(0, 1.09), 0.05, 0, 1);
+    const b = (k + 1) * Math.PI / 3;
+    slab([0.16 * -Math.sin(a), 0.16 * Math.cos(a)], [0.16 * -Math.sin(b), 0.16 * Math.cos(b)], 0.024, 0.024, 0);
+  }
+  for (let r = 1; r <= 5; r++) {
+    const rr = r / 5 * 0.1, n = Math.floor(rr * 120) + 6;
+    for (let j = 0; j < n; j++) { const ph = j / n * 6.283; for (const sd of [1, -1]) pts.push([rr * Math.cos(ph), rr * Math.sin(ph), sd * 0.035 * (1 - rr / 0.1), Math.cos(ph) * rr * 4, Math.sin(ph) * rr * 4, sd, 1, 0.15, 0]); }
+  }
+  return pts;
+}
+const PTS = build();
+const COLS = 72, ROWS = 33, ASPECT = 1.9; // monospace chars are ~2x taller than wide
+let L = [-0.4, 0.55, 0.75]; { const n = Math.hypot(...L); L = L.map((v) => v / n); }
+let spinBoost = 1;
+const sparkles = Array.from({ length: 26 }, () => { const a = Math.random() * 6.28, r = 0.25 + Math.random() * 0.9; return [r * Math.cos(a), r * Math.sin(a), (Math.random() - 0.5) * 0.1, Math.random() * 6.28, 1.5 + Math.random() * 2.5]; });
+
+let spinT = 0, lastT = 0;
+function renderFlake(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000 || 0); lastT = now; spinT += dt * spinBoost;
+  const t = spinT, chars = new Array(COLS * ROWS).fill(" "), cols = new Array(COLS * ROWS).fill(null), z = new Float32Array(COLS * ROWS).fill(-1e9);
+  const scale = (ROWS - 2) / 2.3, cx = COLS / 2, cy = ROWS / 2;
+  const sp = t * 0.9, tw = t * 0.25, tl = 0.25;
+  const cs = Math.cos(sp), ss = Math.sin(sp), cw = Math.cos(tw), sw = Math.sin(tw), ct = Math.cos(tl), st = Math.sin(tl);
+  const xf = (x, y, zz) => { let X = x * cw - y * sw, Y = x * sw + y * cw; let Z; [X, Z] = [X * cs + zz * ss, -X * ss + zz * cs]; [Y, Z] = [Y * ct - Z * st, Y * st + Z * ct]; return [X, Y, Z]; };
+  const plot = (c, r, d, ch, col) => { if (r >= 0 && r < ROWS && c >= 0 && c < COLS) { const i = r * COLS + c; if (d > z[i]) { z[i] = d; chars[i] = ch; cols[i] = col; } } };
+  const glint = (t * 0.6) % 1.4;
+  for (const p of PTS) {
+    const [X, Y, Z] = xf(p[0], p[1], p[2]), [NX, NY, NZ] = xf(p[3], p[4], p[5]);
+    let d = NX * L[0] + NY * L[1] + NZ * L[2]; if (d < 0) d = -d * 0.6;
+    const sh = Math.abs(p[8] - glint) < 0.06 ? 0.35 : 0;
+    const b = Math.min(0.999, Math.max(0, 0.1 + 0.7 * d + p[7] + sh));
+    const f = 4 / (4 - Z), P2 = p[6] ? pal.b : pal.a;
+    plot(Math.floor(cx + X * f * scale * ASPECT), Math.floor(cy - Y * f * scale), Z, SHADE[Math.floor(b * SHADE.length)], P2[Math.floor(b * P2.length)]);
+  }
+  for (const s of sparkles) {
+    const [X, Y, Z] = xf(s[0], s[1], s[2]), f = 4 / (4 - Z), w = Math.sin(t * s[4] + s[3]);
+    const ch = w > 0.85 ? "*" : w > 0.5 ? "+" : w > 0.2 ? "·" : null;
+    if (ch) plot(Math.floor(cx + X * f * scale * ASPECT), Math.floor(cy - Y * f * scale), Z + 0.1, ch, "#fff");
+  }
+  let html = "";
+  for (let r = 0; r < ROWS; r++) {
+    let cur = null, run = "";
+    for (let c = 0; c < COLS; c++) {
+      const i = r * COLS + c, col = chars[i] === " " ? cur : cols[i];
+      if (col !== cur) { if (run) html += cur ? `<span style="color:${cur}">${esc(run)}</span>` : run; run = ""; cur = col; }
+      run += chars[i];
+    }
+    if (run) html += cur ? `<span style="color:${cur}">${esc(run)}</span>` : run;
+    html += "\n";
+  }
+  $("flake").innerHTML = html;
+}
+function fitFlake() {
+  const w = $("flake").parentElement.clientWidth - 8;
+  $("flake").style.fontSize = Math.min(13, w / (COLS * 0.6)) + "px";
+}
+addEventListener("resize", fitFlake);
+let flakeOn = false;
+function flakeLoop(now) { if (flakeOn) renderFlake(now); requestAnimationFrame(flakeLoop); }
+requestAnimationFrame(flakeLoop);
+
+// ---------- the terminal story ----------
+const log = $("log");
+function addLine(html, cls = "") { const d = document.createElement("div"); d.className = "line " + cls; d.innerHTML = html; log.appendChild(d); return d; }
+async function type(el, text, speed = 42, prefix = "") {
+  const cur = '<span class="cursor"></span>';
+  for (let i = 1; i <= text.length; i++) { el.innerHTML = prefix + esc(text.slice(0, i)) + cur; await sleep(speed + Math.random() * 30); }
+  el.innerHTML = prefix + esc(text);
+}
+
+async function story() {
+  log.innerHTML = ""; $("flake").innerHTML = ""; $("q").textContent = ""; $("msg").textContent = "";
+  $("btns").classList.remove("show"); $("sig").classList.remove("show"); $("replay").classList.remove("show");
+  flakeOn = false; pal = { a: ICE, b: PINK }; spinBoost = 1;
+  await sleep(500);
+  const cmd = addLine("");
+  await type(cmd, `python3 ${$("title").textContent}`, 55, '<span class="prompt">~ $ </span>');
+  await sleep(450);
+  const l1 = addLine("", "dim"); await type(l1, TO ? `hi ${TO} :)` : "hi you :)", 50);
+  await sleep(300);
+  const l2 = addLine("", "dim"); await type(l2, "i made you something...", 50);
+  await sleep(300);
+  const l3 = addLine("");
+  for (let i = 0; i <= 12; i++) { l3.innerHTML = `<span class="dim">loading </span><span class="prompt">[${"█".repeat(i)}${"·".repeat(12 - i)}]</span> ${Math.round(i / 12 * 100)}%`; await sleep(70 + Math.random() * 60); }
+  l3.innerHTML += ' <span class="ok">✓</span>';
+  await sleep(400);
+  fitFlake(); flakeOn = true;
+  await sleep(1300);
+  await type($("q"), QUESTION, 45);
+  $("btns").classList.add("show");
+}
+
+// ---------- the runaway "no" ----------
+const NO_LINES = ["error: answer not found", "are you sure? 🥺", "that button is broken, sorry", "try the other one", "permission denied ❄", "no is not in my code", "pls 🥹"];
+let noCount = 0;
+function runAway() {
+  const b = $("no"), r = b.getBoundingClientRect();
+  if (!b.classList.contains("loose")) { b.style.left = r.left + "px"; b.style.top = r.top + "px"; b.classList.add("loose"); }
+  const pad = 20, w = r.width, h = r.height;
+  let x, y, tries = 0;
+  do { x = pad + Math.random() * (innerWidth - w - pad * 2); y = pad + Math.random() * (innerHeight - h - pad * 2); tries++; }
+  while (Math.hypot(x - r.left, y - r.top) < 160 && tries < 20);
+  b.style.left = x + "px"; b.style.top = y + "px";
+  noCount++;
+  b.style.transform = `scale(${Math.max(0.55, 1 - noCount * 0.07)})`;
+  $("yes").style.transform = `scale(${Math.min(1.6, 1 + noCount * 0.09)})`;
+  $("msg").textContent = NO_LINES[(noCount - 1) % NO_LINES.length];
+  spinBoost = 1 + Math.min(noCount, 6) * 0.6; setTimeout(() => (spinBoost = Math.max(1, spinBoost - 1)), 600);
+}
+$("no").addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") runAway(); });
+$("no").addEventListener("click", (e) => { e.preventDefault(); runAway(); });
+
+// ---------- yes! ----------
+$("yes").addEventListener("click", async () => {
+  $("btns").classList.remove("show"); $("no").classList.remove("loose"); $("no").style.cssText = ""; $("yes").style.transform = "";
+  $("msg").textContent = ""; noCount = 0;
+  pal = { a: PINK, b: ICE }; spinBoost = 3; snowPink = true;
+  setTimeout(() => (spinBoost = 1.2), 1600);
+  const H = $("hearts");
+  for (let i = 0; i < 46; i++) {
+    const s = document.createElement("span");
+    s.textContent = ["💗", "❄️", "🤍", "💕", "❄"][i % 5];
+    s.style.left = Math.random() * 100 + "vw"; s.style.fontSize = 14 + Math.random() * 18 + "px";
+    s.style.animationDuration = 3 + Math.random() * 3 + "s"; s.style.animationDelay = Math.random() * 1.5 + "s";
+    H.appendChild(s); setTimeout(() => s.remove(), 8000);
+  }
+  $("q").textContent = "";
+  await type($("q"), "yay!! you're my snowflake now ❄️💗", 55);
+  const out = addLine("", "ok"); await type(out, "> answer saved forever. no take backs.", 30);
+  $("sig").textContent = FROM ? `// made with love by ${FROM}` : "// made with love, just for you";
+  $("sig").classList.add("show"); $("replay").classList.add("show");
+});
+$("replay").addEventListener("click", () => { snowPink = false; story(); });
+
+story();
+</script>
+</body>
+</html>
